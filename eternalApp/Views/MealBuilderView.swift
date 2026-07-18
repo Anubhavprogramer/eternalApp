@@ -389,19 +389,21 @@ struct MealBuilderView: View {
                             .foregroundStyle(.white)
                             .padding(.vertical, 16)
                             .padding(.horizontal, 28)
-                            .background {
-                                Capsule()
-                                    .fill(LinearGradient(
-                                        colors: viewModel.recommendationState == .loading
-                                            ? [Color.gray.opacity(0.5), Color.gray.opacity(0.5)]
-                                            : [Color.zomatoAccent, Color(red: 0.85, green: 0.20, blue: 0.28)],
-                                        startPoint: .leading, endPoint: .trailing))
-                                    .shadow(
-                                        color: Color.zomatoAccent.opacity(
-                                            viewModel.recommendationState == .loading ? 0 : 0.50),
-                                        radius: 18, x: 0, y: 8)
-                            }
+                            
+//                            .background {
+//                                Capsule()
+//                                    .fill(LinearGradient(
+//                                        colors: viewModel.recommendationState == .loading
+//                                            ? [Color.gray.opacity(0.5), Color.gray.opacity(0.5)]
+//                                            : [Color.zomatoAccent, Color(red: 0.85, green: 0.20, blue: 0.28)],
+//                                        startPoint: .leading, endPoint: .trailing))
+//                                    .shadow(
+//                                        color: Color.zomatoAccent.opacity(
+//                                            viewModel.recommendationState == .loading ? 0 : 0.50),
+//                                        radius: 18, x: 0, y: 8)
+//                            }
                         }
+                        .glassEffect(.clear)
                         .buttonStyle(.plain)
                         .disabled(viewModel.recommendationState == .loading)
                         .animation(.easeInOut(duration: 0.2), value: viewModel.recommendationState)
