@@ -20,7 +20,9 @@ struct MealBuilderView: View {
 
     var body: some View {
         ZStack {
-            AnimatedGradientBackground()
+            
+            Color.zomatoBackground
+                .ignoresSafeArea()
 
             VStack(spacing: 0) {
                 topBar

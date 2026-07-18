@@ -1,48 +1,5 @@
 import SwiftUI
 
-// MARK: - Animated Gradient Background
-
-struct AnimatedGradientBackground: View {
-    var body: some View {
-        TimelineView(.animation) { timeline in
-            let t = timeline.date.timeIntervalSinceReferenceDate
-            Canvas { ctx, size in
-                // Base dark fill
-                ctx.fill(
-                    Path(CGRect(origin: .zero, size: size)),
-                    with: .color(Color(red: 0.08, green: 0.07, blue: 0.10))
-                )
-
-                // Blob 1 — red, drifts diagonally
-                let b1x = size.width  * (0.20 + 0.30 * sin(t * 0.18))
-                let b1y = size.height * (0.20 + 0.25 * cos(t * 0.14))
-                ctx.fill(
-                    Path(ellipseIn: CGRect(x: b1x - 160, y: b1y - 160, width: 320, height: 320)),
-                    with: .color(Color(red: 0.90, green: 0.22, blue: 0.28).opacity(0.28))
-                )
-
-                // Blob 2 — orange, opposite phase
-                let b2x = size.width  * (0.75 + 0.22 * cos(t * 0.13))
-                let b2y = size.height * (0.65 + 0.20 * sin(t * 0.17))
-                ctx.fill(
-                    Path(ellipseIn: CGRect(x: b2x - 180, y: b2y - 180, width: 360, height: 360)),
-                    with: .color(Color(red: 0.80, green: 0.30, blue: 0.10).opacity(0.20))
-                )
-
-                // Blob 3 — purple, slow, top-right
-                let b3x = size.width  * (0.80 + 0.12 * sin(t * 0.09))
-                let b3y = size.height * (0.12 + 0.14 * cos(t * 0.11))
-                ctx.fill(
-                    Path(ellipseIn: CGRect(x: b3x - 120, y: b3y - 120, width: 240, height: 240)),
-                    with: .color(Color(red: 0.40, green: 0.15, blue: 0.55).opacity(0.18))
-                )
-            }
-            .blur(radius: 60)
-        }
-        .ignoresSafeArea()
-    }
-}
-
 // MARK: - Typewriter Text
 
 struct TypewriterText: View {
