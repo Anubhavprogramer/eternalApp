@@ -11,6 +11,8 @@ struct RootView: View {
                     switch route {
                     case .cart:
                         CartView()
+                    case .mealBuilder:
+                        MealBuilderView()
                     }
                 }
         }

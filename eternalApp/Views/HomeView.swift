@@ -9,7 +9,7 @@ struct HomeView: View {
     @State private var selectedCategoryID = "popular"
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .bottomTrailing) {
             LinearGradient(
                 colors: [Color(red: 0.99, green: 0.84, blue: 0.34), Color(red: 0.98, green: 0.96, blue: 0.90)],
                 startPoint: .top,
@@ -64,6 +64,13 @@ struct HomeView: View {
                     .padding(.bottom, 110)
                 }
             }
+
+            // Floating widget button
+            MakeMealWidgetButton {
+                path.append(.mealBuilder)
+            }
+            .padding(.trailing, 20)
+            .padding(.bottom, 32)
         }
         .toolbar(.hidden, for: .navigationBar)
     }
