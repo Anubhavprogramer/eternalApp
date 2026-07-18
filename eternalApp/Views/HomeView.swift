@@ -17,15 +17,15 @@ struct HomeView: View {
                 endPoint: .center
             )
             .ignoresSafeArea()
+            // Tap anywhere on the background to dismiss keyboard
+            .onTapGesture { UIApplication.shared.dismissKeyboard() }
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 22) {
                     AppHeaderView(
                         restaurant: store.restaurant,
                         cartCount: cartViewModel.itemCount,
-                        onCartTap: {
-                            path.append(.cart)
-                        }
+                        onCartTap: { path.append(.cart) }
                     )
 
                     SearchBarView(query: $query)
@@ -48,15 +48,9 @@ struct HomeView: View {
                                 MenuItemCardView(
                                     item: item,
                                     quantity: cartViewModel.quantity(for: item),
-                                    onAdd: {
-                                        cartViewModel.add(item)
-                                    },
-                                    onIncrease: {
-                                        cartViewModel.increase(item)
-                                    },
-                                    onDecrease: {
-                                        cartViewModel.decrease(item)
-                                    }
+                                    onAdd:      { cartViewModel.add(item)      },
+                                    onIncrease: { cartViewModel.increase(item) },
+                                    onDecrease: { cartViewModel.decrease(item) }
                                 )
                             }
                         }
@@ -65,9 +59,11 @@ struct HomeView: View {
                     .padding(.bottom, 110)
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
 
             // Floating widget button
             MakeMealWidgetButton {
+                UIApplication.shared.dismissKeyboard()
                 withAnimation(.spring(response: 0.48, dampingFraction: 0.82)) {
                     showingMealBuilder = true
                 }
@@ -77,7 +73,6 @@ struct HomeView: View {
 
             // Custom modal overlay
             if showingMealBuilder {
-                // Dim backdrop
                 Color.black.opacity(0.50)
                     .ignoresSafeArea()
                     .onTapGesture {
@@ -89,7 +84,6 @@ struct HomeView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .zIndex(1)
 
-                // Sheet panel — sits at bottom, 80% height
                 GeometryReader { geo in
                     VStack(spacing: 0) {
                         Spacer()
@@ -112,7 +106,9 @@ struct HomeView: View {
     }
 
     private var filteredItems: [MenuItem] {
-        let categoryItems = store.items(for: store.categories.first(where: { $0.id == selectedCategoryID }) ?? store.categories[0])
+        let categoryItems = store.items(
+            for: store.categories.first(where: { $0.id == selectedCategoryID }) ?? store.categories[0]
+        )
         let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedQuery.isEmpty else { return categoryItems }
         return categoryItems.filter {

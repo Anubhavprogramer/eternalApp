@@ -1,5 +1,15 @@
 import SwiftUI
 
+// MARK: - Keyboard dismiss helper
+
+extension UIApplication {
+    func dismissKeyboard() {
+        sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+}
+
+// MARK: - App Header
+
 struct AppHeaderView: View {
     let restaurant: RestaurantProfile
     let cartCount: Int
@@ -43,30 +53,57 @@ struct AppHeaderView: View {
     }
 }
 
+// MARK: - Search Bar
+
 struct SearchBarView: View {
     @Binding var query: String
+    @FocusState private var isFocused: Bool
 
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(Color.red.opacity(0.85))
+
             TextField("Search for \"ice cream\"", text: $query)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
-            Image(systemName: "mic.fill")
-                .foregroundStyle(Color.red.opacity(0.85))
+                .focused($isFocused)
+                .submitLabel(.search)
+                .onSubmit { isFocused = false }
+
+            if isFocused {
+                Button {
+                    query = ""
+                    isFocused = false
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(Color.red.opacity(0.85))
+                }
+                .buttonStyle(.plain)
+                .transition(.opacity.combined(with: .scale(scale: 0.8)))
+            } else {
+                Image(systemName: "mic.fill")
+                    .foregroundStyle(Color.red.opacity(0.85))
+                    .transition(.opacity.combined(with: .scale(scale: 0.8)))
+            }
         }
+        .animation(.spring(response: 0.28, dampingFraction: 0.72), value: isFocused)
         .font(.callout.weight(.medium))
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
         .background(.white, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(.black.opacity(0.05), lineWidth: 1)
+                .stroke(
+                    isFocused ? Color.red.opacity(0.35) : Color.black.opacity(0.05),
+                    lineWidth: isFocused ? 1.5 : 1
+                )
         )
         .padding(.horizontal, 20)
     }
 }
+
+// MARK: - Hero Card
 
 struct HeroCardView: View {
     let restaurant: RestaurantProfile
@@ -118,6 +155,8 @@ struct HeroCardView: View {
     }
 }
 
+// MARK: - Offer Banner
+
 struct OfferBannerView: View {
     var body: some View {
         HStack(spacing: 16) {
@@ -146,6 +185,8 @@ struct OfferBannerView: View {
     }
 }
 
+// MARK: - Category Chips
+
 struct CategoryChipsView: View {
     let categories: [MenuCategory]
     @Binding var selectedCategoryID: String
@@ -161,8 +202,15 @@ struct CategoryChipsView: View {
                             .font(.subheadline.weight(.semibold))
                             .padding(.horizontal, 18)
                             .padding(.vertical, 10)
-                            .background(selectedCategoryID == category.id ? Color.zomatoSurfaceAlt : Color.zomatoSurface.opacity(0.85), in: Capsule())
-                            .foregroundStyle(selectedCategoryID == category.id ? .white : .white.opacity(0.78))
+                            .background(
+                                selectedCategoryID == category.id
+                                    ? Color.zomatoSurfaceAlt
+                                    : Color.zomatoSurface.opacity(0.85),
+                                in: Capsule()
+                            )
+                            .foregroundStyle(
+                                selectedCategoryID == category.id ? .white : .white.opacity(0.78)
+                            )
                     }
                     .buttonStyle(.plain)
                 }
@@ -172,6 +220,8 @@ struct CategoryChipsView: View {
     }
 }
 
+// MARK: - Menu Item Card
+
 struct MenuItemCardView: View {
     let item: MenuItem
     let quantity: Int
@@ -180,12 +230,18 @@ struct MenuItemCardView: View {
     let onDecrease: () -> Void
 
     private var priceText: String {
-        item.price.formatted(.currency(code: "INR").precision(.fractionLength(item.price.rounded() == item.price ? 0 : 2)))
+        item.price.formatted(
+            .currency(code: "INR")
+            .precision(.fractionLength(item.price.rounded() == item.price ? 0 : 2))
+        )
     }
 
     private var originalPriceText: String? {
         guard let originalPrice = item.originalPrice else { return nil }
-        return originalPrice.formatted(.currency(code: "INR").precision(.fractionLength(originalPrice.rounded() == originalPrice ? 0 : 2)))
+        return originalPrice.formatted(
+            .currency(code: "INR")
+            .precision(.fractionLength(originalPrice.rounded() == originalPrice ? 0 : 2))
+        )
     }
 
     var body: some View {
@@ -198,13 +254,12 @@ struct MenuItemCardView: View {
                         RemoteFoodImage(urlString: item.imageURL)
                             .scaledToFill()
                             .frame(width: 110, height: 110)
-                            .clipShape(
-                                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                            )
+                            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                     }
                     .clipped()
+
                 Button(action: onAdd) {
-                    Image(systemName: quantity == 0 ? "plus" : "plus")
+                    Image(systemName: "plus")
                         .font(.headline.weight(.bold))
                         .frame(width: 34, height: 34)
                         .background(Color.zomatoAccent, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
@@ -277,6 +332,8 @@ struct MenuItemCardView: View {
     }
 }
 
+// MARK: - Cart Row
+
 struct CartRowView: View {
     let lineItem: CartLineItem
     let onIncrease: () -> Void
@@ -297,9 +354,12 @@ struct CartRowView: View {
                     .font(.subheadline)
                     .foregroundStyle(.white.opacity(0.65))
                     .lineLimit(2)
-                Text(lineItem.item.price.formatted(.currency(code: "INR").precision(.fractionLength(lineItem.item.price.rounded() == lineItem.item.price ? 0 : 2))))
-                    .font(.subheadline.weight(.bold))
-                    .foregroundStyle(.white)
+                Text(lineItem.item.price.formatted(
+                    .currency(code: "INR")
+                    .precision(.fractionLength(lineItem.item.price.rounded() == lineItem.item.price ? 0 : 2))
+                ))
+                .font(.subheadline.weight(.bold))
+                .foregroundStyle(.white)
             }
 
             Spacer(minLength: 0)
@@ -333,11 +393,13 @@ struct CartRowView: View {
     }
 }
 
+// MARK: - Make Meal Widget Button
+
 struct MakeMealWidgetButton: View {
     let action: () -> Void
 
-    @State private var isPressed = false
-    @State private var isPulsing = false
+    @State private var isPressed      = false
+    @State private var isPulsing      = false
     @State private var shimmerOffset: CGFloat = -120
 
     var body: some View {
@@ -380,15 +442,10 @@ struct MakeMealWidgetButton: View {
                             )
                         )
 
-                    // shimmer overlay
                     Capsule()
                         .fill(
                             LinearGradient(
-                                colors: [
-                                    .clear,
-                                    .white.opacity(0.22),
-                                    .clear
-                                ],
+                                colors: [.clear, .white.opacity(0.22), .clear],
                                 startPoint: .leading,
                                 endPoint: .trailing
                             )
@@ -406,18 +463,14 @@ struct MakeMealWidgetButton: View {
         .simultaneousGesture(
             DragGesture(minimumDistance: 0)
                 .onChanged { _ in isPressed = true }
-                .onEnded { _ in isPressed = false }
+                .onEnded   { _ in isPressed = false }
         )
         .onAppear {
             isPulsing = true
-            startShimmer()
-        }
-    }
-
-    private func startShimmer() {
-        shimmerOffset = -120
-        withAnimation(.linear(duration: 2.2).repeatForever(autoreverses: false)) {
-            shimmerOffset = 200
+            shimmerOffset = -120
+            withAnimation(.linear(duration: 2.2).repeatForever(autoreverses: false)) {
+                shimmerOffset = 200
+            }
         }
     }
 }
