@@ -176,6 +176,9 @@ struct MealBuilderView: View {
     // Entrance
     @State private var contentOpacity: Double = 0
 
+    // Full-screen loading / result cover
+    @State private var showResultCover = false
+
     var body: some View {
         ZStack {
             Color.zomatoBackground.ignoresSafeArea()
@@ -230,6 +233,23 @@ struct MealBuilderView: View {
         .opacity(contentOpacity)
         .ignoresSafeArea(.keyboard, edges: .bottom)
         .onAppear { runEntranceAnimations() }
+        // Watch for loading → open cover; success → keep cover open (NavigationStack handles push)
+        .onChange(of: viewModel.recommendationState) { _, newState in
+            switch newState {
+            case .loading:
+                showResultCover = true
+            case .failure:
+                showResultCover = false
+            default:
+                break
+            }
+        }
+        .fullScreenCover(isPresented: $showResultCover) {
+            ResultCoverView(viewModel: viewModel, onClose: {
+                showResultCover = false
+                viewModel.reset()
+            })
+        }
     }
 
     // MARK: - Top Bar
@@ -483,6 +503,50 @@ struct MealBuilderView: View {
         withAnimation(.spring(response: 0.50, dampingFraction: 0.75).delay(0.12)) {
             bannerOpacity = 1
             bannerScale   = 1.0
+        }
+    }
+}
+
+// MARK: - Result Cover (full-screen loader only)
+
+private struct ResultCoverView: View {
+    @ObservedObject var viewModel: MealBuilderViewModel
+    let onClose: () -> Void
+
+    var body: some View {
+        ZStack {
+            RecommendationLoadingView()
+
+            // Close button — top left
+            VStack {
+                HStack {
+                    Button { onClose() } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 13, weight: .bold))
+                            .frame(width: 36, height: 36)
+                            .background(.white.opacity(0.10), in: Circle())
+                            .foregroundStyle(.white)
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.leading, 20)
+                    .padding(.top, 56)
+                    Spacer()
+                }
+                Spacer()
+            }
+        }
+        .onChange(of: viewModel.recommendationState) { _, state in
+            // When data arrives or fails, print and close
+            switch state {
+            case .success(let response):
+                print("✅ \(response.recommendations.count) recommendations received")
+                onClose()
+            case .failure(let msg):
+                print("❌ Error: \(msg)")
+                onClose()
+            default:
+                break
+            }
         }
     }
 }

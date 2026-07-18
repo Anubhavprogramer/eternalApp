@@ -18,8 +18,18 @@ enum RecordingState {
 enum RecommendationState: Equatable {
     case idle
     case loading
-    case success(String)
+    case success(RecommendationResponse)
     case failure(String)
+
+    static func == (lhs: RecommendationState, rhs: RecommendationState) -> Bool {
+        switch (lhs, rhs) {
+        case (.idle,    .idle):    return true
+        case (.loading, .loading): return true
+        case (.success, .success): return true
+        case (.failure(let a), .failure(let b)): return a == b
+        default: return false
+        }
+    }
 }
 
 // MARK: - MealBuilderViewModel
@@ -27,12 +37,12 @@ enum RecommendationState: Equatable {
 @MainActor
 final class MealBuilderViewModel: ObservableObject {
 
-    @Published private(set) var state: RecordingState           = .idle
-    @Published private(set) var transcript: String              = ""
-    @Published private(set) var audioLevel: CGFloat             = 0
+    @Published private(set) var state: RecordingState                    = .idle
+    @Published private(set) var transcript: String                       = ""
+    @Published private(set) var audioLevel: CGFloat                      = 0
     @Published private(set) var recommendationState: RecommendationState = .idle
 
-    // MARK: - Private
+    // MARK: - Private audio
 
     private let recognizer  = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
     private var audioEngine = AVAudioEngine()
@@ -41,7 +51,6 @@ final class MealBuilderViewModel: ObservableObject {
 
     // MARK: - Public API
 
-    /// Toggle between idle/done → listening, or listening → stopped.
     func toggle() {
         switch state {
         case .idle, .done: requestPermissionsAndStart()
@@ -50,36 +59,35 @@ final class MealBuilderViewModel: ObservableObject {
         }
     }
 
-    /// Confirm: stop recording, print transcript, move to done.
     func confirm() {
         stopAudio()
         withAnimation(.spring(response: 0.35, dampingFraction: 0.70)) {
             state = transcript.isEmpty ? .idle : .done
         }
-        if !transcript.isEmpty {
-            print("🎙️ Voice input: \(transcript)")
-        }
+        if !transcript.isEmpty { print("🎙️ Voice input: \(transcript)") }
     }
 
-    /// Cancel: stop recording, discard transcript, return to idle.
     func cancel() {
         stopAudio()
         transcript = ""
-        withAnimation(.spring(response: 0.35, dampingFraction: 0.70)) {
-            state = .idle
-        }
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.70)) { state = .idle }
     }
 
-    /// Reset transcript and return to idle (used after done state).
     func reset() {
         transcript = ""
         recommendationState = .idle
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.70)) { state = .idle }
+    }
+
+    func stop() {
+        stopAudio()
         withAnimation(.spring(response: 0.35, dampingFraction: 0.70)) {
-            state = .idle
+            state = transcript.isEmpty ? .idle : .done
         }
     }
 
-    /// Hit the recommendation API with the current transcript + user preferences.
+    // MARK: - Recommend
+
     func recommend(
         vegetarian: Bool,
         nonVegetarian: Bool,
@@ -92,7 +100,7 @@ final class MealBuilderViewModel: ObservableObject {
         guard recommendationState != .loading else { return }
         recommendationState = .loading
 
-        let request = MealRecommendationRequest(
+        let req = MealRecommendationRequest(
             user_response:            transcript,
             vegetarian:               vegetarian,
             non_vegetarian:           nonVegetarian,
@@ -106,53 +114,40 @@ final class MealBuilderViewModel: ObservableObject {
 
         Task {
             do {
-                let response = try await MealRecommendationService.shared.recommend(request)
-                print("✅ Recommendation response:\n\(response)")
-                withAnimation(.spring(response: 0.38, dampingFraction: 0.75)) {
+                let response = try await MealRecommendationService.shared.recommend(req)
+                print("✅ Got \(response.recommendations.count) recommendations")
+                withAnimation(.spring(response: 0.40, dampingFraction: 0.75)) {
                     recommendationState = .success(response)
                 }
             } catch {
                 print("❌ Recommendation error: \(error.localizedDescription)")
-                withAnimation(.spring(response: 0.38, dampingFraction: 0.75)) {
+                withAnimation(.spring(response: 0.40, dampingFraction: 0.75)) {
                     recommendationState = .failure(error.localizedDescription)
                 }
             }
         }
     }
 
-    /// Stop recording cleanly (called by the view on dismiss).
-    func stop() {
-        stopAudio()
-        withAnimation(.spring(response: 0.35, dampingFraction: 0.70)) {
-            state = transcript.isEmpty ? .idle : .done
-        }
-    }
-
     // MARK: - Audio teardown
 
     private func stopAudio() {
-        task?.cancel()
-        task = nil
-        request?.endAudio()
-        request = nil
-
+        task?.cancel(); task = nil
+        request?.endAudio(); request = nil
         if audioEngine.isRunning {
             audioEngine.inputNode.removeTap(onBus: 0)
             audioEngine.stop()
         }
-
         try? AVAudioSession.sharedInstance().setActive(false)
         audioLevel = 0
     }
+
+    // MARK: - Permission flow
 
     private func requestPermissionsAndStart() {
         SFSpeechRecognizer.requestAuthorization { [weak self] status in
             DispatchQueue.main.async {
                 guard let self else { return }
-                guard status == .authorized else {
-                    self.state = .denied
-                    return
-                }
+                guard status == .authorized else { self.state = .denied; return }
                 self.requestMicrophonePermission()
             }
         }
@@ -162,26 +157,20 @@ final class MealBuilderViewModel: ObservableObject {
         AVAudioApplication.requestRecordPermission { [weak self] granted in
             DispatchQueue.main.async {
                 guard let self else { return }
-                guard granted else {
-                    self.state = .denied
-                    return
-                }
+                guard granted else { self.state = .denied; return }
                 self.beginAudioSession()
             }
         }
     }
 
-    // MARK: - Audio session + recognition
+    // MARK: - Audio session
 
     private func beginAudioSession() {
         do {
             let session = AVAudioSession.sharedInstance()
             try session.setCategory(.record, mode: .measurement, options: .duckOthers)
             try session.setActive(true, options: .notifyOthersOnDeactivation)
-        } catch {
-            print("AVAudioSession error: \(error)")
-            return
-        }
+        } catch { print("AVAudioSession error: \(error)"); return }
 
         audioEngine = AVAudioEngine()
         let newRequest = SFSpeechAudioBufferRecognitionRequest()
@@ -190,42 +179,28 @@ final class MealBuilderViewModel: ObservableObject {
 
         let inputNode = audioEngine.inputNode
         let format    = inputNode.outputFormat(forBus: 0)
-
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak self] buffer, _ in
             newRequest.append(buffer)
             self?.updateAudioLevel(from: buffer)
         }
 
-        do {
-            try audioEngine.start()
-        } catch {
-            print("AVAudioEngine start error: \(error)")
-            return
-        }
+        do { try audioEngine.start() } catch { print("AVAudioEngine error: \(error)"); return }
 
         transcript = ""
-        withAnimation(.spring(response: 0.35, dampingFraction: 0.70)) {
-            state = .listening
-        }
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.70)) { state = .listening }
 
         task = recognizer?.recognitionTask(with: newRequest) { [weak self] result, error in
             guard let self else { return }
-            if let result {
-                self.transcript = result.bestTranscription.formattedString
-            }
-            if error != nil || result?.isFinal == true {
-                self.stop()
-            }
+            if let result { self.transcript = result.bestTranscription.formattedString }
+            if error != nil || result?.isFinal == true { self.stop() }
         }
     }
-
-    // MARK: - RMS level calculation
 
     private func updateAudioLevel(from buffer: AVAudioPCMBuffer) {
         guard let channelData = buffer.floatChannelData?[0] else { return }
         let frameCount = Int(buffer.frameLength)
         guard frameCount > 0 else { return }
-        let rms   = (0 ..< frameCount).reduce(0.0) { $0 + channelData[$1] * channelData[$1] }
+        let rms   = (0..<frameCount).reduce(0.0) { $0 + channelData[$1] * channelData[$1] }
         let level = CGFloat(sqrt(rms / Float(frameCount))) * 8
         DispatchQueue.main.async { self.audioLevel = min(level, 1.0) }
     }
