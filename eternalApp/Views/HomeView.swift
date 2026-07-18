@@ -7,6 +7,7 @@ struct HomeView: View {
     private let store = ZomatoMenuStore()
     @State private var query = ""
     @State private var selectedCategoryID = "popular"
+    @State private var showingMealBuilder = false
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
@@ -67,12 +68,47 @@ struct HomeView: View {
 
             // Floating widget button
             MakeMealWidgetButton {
-                path.append(.mealBuilder)
+                withAnimation(.spring(response: 0.48, dampingFraction: 0.82)) {
+                    showingMealBuilder = true
+                }
             }
             .padding(.trailing, 20)
             .padding(.bottom, 32)
+
+            // Custom modal overlay
+            if showingMealBuilder {
+                // Dim backdrop
+                Color.black.opacity(0.50)
+                    .ignoresSafeArea()
+                    .onTapGesture {
+                        withAnimation(.spring(response: 0.38, dampingFraction: 0.88)) {
+                            showingMealBuilder = false
+                        }
+                    }
+                    .transition(.opacity)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .zIndex(1)
+
+                // Sheet panel — sits at bottom, 80% height
+                GeometryReader { geo in
+                    VStack(spacing: 0) {
+                        Spacer()
+                        MealBuilderView(onDismiss: {
+                            withAnimation(.spring(response: 0.38, dampingFraction: 0.88)) {
+                                showingMealBuilder = false
+                            }
+                        })
+                        .frame(height: geo.size.height * 0.80)
+                        .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
+                    }
+                }
+                .ignoresSafeArea()
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .zIndex(2)
+            }
         }
         .toolbar(.hidden, for: .navigationBar)
+        .animation(.spring(response: 0.48, dampingFraction: 0.82), value: showingMealBuilder)
     }
 
     private var filteredItems: [MenuItem] {
