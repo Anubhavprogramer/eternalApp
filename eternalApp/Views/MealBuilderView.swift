@@ -1,31 +1,5 @@
 import SwiftUI
 
-// MARK: - Ripple Ring
-
-private struct RippleRing: View {
-    let size: CGFloat
-    let lineWidth: CGFloat
-    let opacity: Double
-    let duration: Double
-    let delay: Double
-
-    @State private var animating = false
-
-    var body: some View {
-        Circle()
-            .stroke(Color.zomatoAccent.opacity(animating ? 0 : opacity), lineWidth: lineWidth)
-            .frame(width: size, height: size)
-            .scaleEffect(animating ? 1.35 : 1.0)
-            .onAppear {
-                withAnimation(
-                    .easeOut(duration: duration)
-                    .repeatForever(autoreverses: false)
-                    .delay(delay)
-                ) { animating = true }
-            }
-    }
-}
-
 // MARK: - Diet Chip
 
 private struct DietChip: View {
@@ -147,8 +121,6 @@ private struct MealPreferencesCard: View {
             }
         }
         .padding(20)
-        .background(Color.white.opacity(0.05),
-                    in: RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .stroke(Color.white.opacity(0.08), lineWidth: 1)
@@ -197,29 +169,21 @@ struct MealBuilderView: View {
                     if viewModel.state == .done {
                         VStack(spacing: 20) {
                             VStack(spacing: 12) {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .font(.system(size: 32))
-                                    .foregroundStyle(.green)
-                                    .symbolEffect(.bounce, value: viewModel.state)
-
+                                
                                 Text(viewModel.transcript)
                                     .font(.system(size: 18, weight: .semibold, design: .rounded))
                                     .foregroundStyle(.white)
                                     .multilineTextAlignment(.center)
                                     .padding(.horizontal, 32)
 
-                                Button { viewModel.reset() } label: {
-                                    Text("Tap to speak again")
-                                        .font(.caption.weight(.semibold))
-                                        .foregroundStyle(.white.opacity(0.45))
-                                }
-                                .buttonStyle(.plain)
                             }
                             .padding(.top, 24)
 
                             MealPreferencesCard(budget: $budget, selectedDiets: $selectedDiets)
                         }
                         .transition(.scale(scale: 0.94).combined(with: .opacity))
+                    } else {
+                        Spacer().frame(height: 320)
                     }
 
                     Spacer().frame(height: 20)
@@ -278,12 +242,6 @@ struct MealBuilderView: View {
 
     private var banner: some View {
         ZStack {
-            Circle().fill(.white.opacity(0.08))
-                .frame(width: 110, height: 110)
-                .offset(x: -90, y: -20).blur(radius: 1)
-            Circle().fill(.white.opacity(0.06))
-                .frame(width: 80, height: 80)
-                .offset(x: 80, y: 30).blur(radius: 1)
 
             HStack(spacing: 14) {
                 ZStack {
@@ -352,8 +310,6 @@ struct MealBuilderView: View {
                 // Idle — mic button
                 if viewModel.state == .idle {
                     ZStack {
-                        RippleRing(size: 100, lineWidth: 10, opacity: 0.22, duration: 1.4, delay: 0)
-                        RippleRing(size: 80,  lineWidth: 6,  opacity: 0.14, duration: 1.4, delay: 0.22)
                         Button { viewModel.toggle() } label: {
                             ZStack {
                                 Circle()

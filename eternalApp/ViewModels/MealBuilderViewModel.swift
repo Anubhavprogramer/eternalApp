@@ -37,9 +37,9 @@ enum RecommendationState: Equatable {
 @MainActor
 final class MealBuilderViewModel: ObservableObject {
 
-    @Published private(set) var state: RecordingState                    = .idle
-    @Published private(set) var transcript: String                       = ""
-    @Published private(set) var audioLevel: CGFloat                      = 0
+    @Published private(set) var state: RecordingState = .idle
+    @Published private(set) var transcript: String = ""
+    @Published private(set) var audioLevel: CGFloat = 0
     @Published private(set) var recommendationState: RecommendationState = .idle
 
     // MARK: - Private audio
