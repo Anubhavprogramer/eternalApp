@@ -41,8 +41,7 @@ struct MealBuilderView: View {
     @State private var bannerOpacity: Double  = 0
     @State private var bannerScale: CGFloat   = 0.94
 
-    // Headline glow pulse
-    @State private var glowPulse: Bool = false
+    // Headline glow pulse — unused, kept for future use
 
     // Entrance
     @State private var contentOpacity: Double = 0
@@ -61,11 +60,6 @@ struct MealBuilderView: View {
 
                 banner
                     .padding(.horizontal, 20)
-
-                Spacer()
-
-                centreSection
-                    .animation(.spring(response: 0.42, dampingFraction: 0.78), value: viewModel.state)
 
                 Spacer()
 
@@ -105,19 +99,6 @@ struct MealBuilderView: View {
 
     private var banner: some View {
         ZStack {
-//            RoundedRectangle(cornerRadius: 22, style: .continuous)
-//                .fill(LinearGradient(
-//                    colors: [
-//                        Color(red: 0.55, green: 0.10, blue: 0.16),
-//                        Color.zomatoAccent,
-//                        Color(red: 0.95, green: 0.48, blue: 0.18)
-//                    ],
-//                    startPoint: .topLeading,
-//                    endPoint: .bottomTrailing
-//                ))
-//                .frame(height: 88)
-//                .cornerRadius(32)
-//                .glassEffect(.clear)
                 
 
             // Decorative blobs
@@ -163,107 +144,75 @@ struct MealBuilderView: View {
         .glassEffect(.clear)
     }
 
-    // MARK: - Centre Section (state-driven)
-
-    @ViewBuilder
-    private var centreSection: some View {
-        switch viewModel.state {
-
-        case .idle:
-            VStack(spacing: 14) {
-                Text("Speak or type what you have —\nwe'll suggest the perfect dish.")
-                    .font(.subheadline)
-                    .foregroundStyle(.white.opacity(0.42))
-                    .multilineTextAlignment(.center)
-
-                TypewriterText(
-                    fullText: "LIST YOUR\nITEMS HERE..",
-                    font: .system(size: 40, weight: .black, design: .rounded),
-                    delay: 0.05
-                )
-                .multilineTextAlignment(.center)
-                .foregroundStyle(LinearGradient(
-                    colors: [Color.zomatoAccent, Color(red: 0.95, green: 0.52, blue: 0.18)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                ))
-                .shadow(
-                    color: Color.zomatoAccent.opacity(glowPulse ? 0.60 : 0.15),
-                    radius: glowPulse ? 18 : 5,
-                    x: 0, y: 0
-                )
-                .animation(
-                    .easeInOut(duration: 1.8).repeatForever(autoreverses: true),
-                    value: glowPulse
-                )
-            }
-            .padding(.horizontal, 28)
-            .transition(.opacity)
-
-        case .listening:
-            VStack(spacing: 20) {
-                WaveformView(level: viewModel.audioLevel)
-
-                Text(viewModel.transcript.isEmpty ? "Listening…" : viewModel.transcript)
-                    .font(.system(size: 20, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.white)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
-                    .animation(.easeInOut(duration: 0.15), value: viewModel.transcript)
-            }
-            .transition(.scale(scale: 0.92).combined(with: .opacity))
-
-        case .done:
-            VStack(spacing: 16) {
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 36))
-                    .foregroundStyle(.green)
-                    .symbolEffect(.bounce, value: viewModel.state)
-
-                Text(viewModel.transcript)
-                    .font(.system(size: 20, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.white)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
-
-                Button { viewModel.reset() } label: {
-                    Text("Tap to speak again")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.white.opacity(0.45))
-                }
-                .buttonStyle(.plain)
-            }
-            .transition(.scale(scale: 0.92).combined(with: .opacity))
-
-        case .denied:
-            VStack(spacing: 10) {
-                Image(systemName: "mic.slash.fill")
-                    .font(.system(size: 36))
-                    .foregroundStyle(Color.zomatoAccent)
-                Text("Microphone access denied.\nPlease enable it in Settings.")
-                    .font(.subheadline)
-                    .foregroundStyle(.white.opacity(0.60))
-                    .multilineTextAlignment(.center)
-            }
-            .padding(.horizontal, 32)
-            .transition(.opacity)
-        }
-    }
-
     // MARK: - Mic Control
 
     private var micControl: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 16) {
+
+            // ── Waveform + transcript (listening only) ────────────────
+            if viewModel.state == .listening {
+                VStack(spacing: 12) {
+
+                    Text(viewModel.transcript.isEmpty ? "Listening…" : viewModel.transcript)
+                        .font(.system(size: 18, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 32)
+                        .animation(.easeInOut(duration: 0.15), value: viewModel.transcript)
+                }
+                .transition(.scale(scale: 0.92).combined(with: .opacity))
+            }
+
+            // ── Done: transcript result ───────────────────────────────
+            if viewModel.state == .done {
+                VStack(spacing: 12) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 32))
+                        .foregroundStyle(.green)
+                        .symbolEffect(.bounce, value: viewModel.state)
+
+                    Text(viewModel.transcript)
+                        .font(.system(size: 18, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 32)
+
+                    Button { viewModel.reset() } label: {
+                        Text("Tap to speak again")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.white.opacity(0.45))
+                    }
+                    .buttonStyle(.plain)
+                }
+                .transition(.scale(scale: 0.92).combined(with: .opacity))
+            }
+
+            // ── Denied ────────────────────────────────────────────────
+            if viewModel.state == .denied {
+                VStack(spacing: 8) {
+                    Image(systemName: "mic.slash.fill")
+                        .font(.system(size: 32))
+                        .foregroundStyle(Color.zomatoAccent)
+                    Text("Microphone access denied.\nPlease enable it in Settings.")
+                        .font(.subheadline)
+                        .foregroundStyle(.white.opacity(0.60))
+                        .multilineTextAlignment(.center)
+                }
+                .padding(.horizontal, 32)
+                .transition(.opacity)
+            }
+
+            // ── Button row ────────────────────────────────────────────
             ZStack {
-                // ── Idle / done / denied: mic button ─────────────────
+                // Idle / done / denied — single mic button
                 if viewModel.state != .listening {
                     ZStack {
-
                         Button { viewModel.toggle() } label: {
                             ZStack {
                                 Circle()
-                                    .glassEffect(.clear)
+                                    .fill(micButtonGradient)
                                     .frame(width: 66, height: 66)
+                                    .shadow(color: micButtonShadow, radius: 20, x: 0, y: 8)
                                 Image(systemName: micButtonIcon)
                                     .font(.system(size: 26, weight: .semibold))
                                     .foregroundStyle(.white)
@@ -275,17 +224,17 @@ struct MealBuilderView: View {
                     .transition(.scale(scale: 0.6).combined(with: .opacity))
                 }
 
-                // ── Listening: cross + check only ─────────────────────
+                // Listening — cross | waveform | check
                 if viewModel.state == .listening {
                     HStack(spacing: 36) {
-                        // Cancel — discard and reset
+                        // Cancel
                         Button {
                             viewModel.stop()
                             viewModel.reset()
                         } label: {
                             ZStack {
                                 Circle()
-                                    .glassEffect(.clear)
+                                    .fill(.white.opacity(0.12))
                                     .frame(width: 62, height: 62)
                                 Image(systemName: "xmark")
                                     .font(.system(size: 22, weight: .bold))
@@ -293,15 +242,14 @@ struct MealBuilderView: View {
                             }
                         }
                         .buttonStyle(.plain)
-
-                        // Confirm — commit transcript
-                        Button {
-                            viewModel.stop()
-                        } label: {
+                        
+                        WaveformView(level: viewModel.audioLevel)
+                        
+                        // Confirm
+                        Button { viewModel.stop() } label: {
                             ZStack {
                                 Circle()
                                     .fill(Color.green.opacity(0.88))
-                                    .glassEffect(.clear)
                                     .frame(width: 62, height: 62)
                                     .shadow(color: .green.opacity(0.45), radius: 14, x: 0, y: 6)
                                 Image(systemName: "checkmark")
@@ -384,9 +332,6 @@ struct MealBuilderView: View {
         shimmerOffset = -280
         withAnimation(.linear(duration: 2.4).repeatForever(autoreverses: false).delay(0.3)) {
             shimmerOffset = 380
-        }
-        withAnimation(.easeInOut(duration: 1.8).repeatForever(autoreverses: true).delay(1.8)) {
-            glowPulse = true
         }
     }
 }

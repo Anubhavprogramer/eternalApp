@@ -62,30 +62,31 @@ struct TypewriterText: View {
 struct WaveformView: View {
     let level: CGFloat   // 0–1
 
-    private let barCount = 7
+    private let barCount = 12
 
     var body: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 5) {
             ForEach(0 ..< barCount, id: \.self) { i in
                 Capsule()
-                    .fill(Color.zomatoAccent.opacity(0.85))
-                    .frame(width: 4, height: barHeight(for: i))
+                    .fill(Color.zomatoAccent.opacity(0.90))
+                    .frame(width: 6, height: barHeight(for: i))
                     .animation(
-                        .spring(response: 0.22, dampingFraction: 0.55)
-                            .delay(Double(i) * 0.03),
+                        .spring(response: 0.18, dampingFraction: 0.45)
+                            .delay(Double(i) * 0.025),
                         value: level
                     )
             }
         }
-        .frame(height: 40)
+        .frame(height: 90)
     }
 
     private func barHeight(for index: Int) -> CGFloat {
         let centre   = Double(barCount - 1) / 2.0
         let distance = abs(Double(index) - centre)
-        let shape    = 1.0 - (distance / centre) * 0.5  // tallest at centre
-        let base: CGFloat = 6
-        let maxH: CGFloat = 38
-        return base + (maxH - base) * level * CGFloat(shape)
+        // Bell-curve shape: centre bars peak higher
+        let shape    = pow(1.0 - (distance / centre), 1.4)
+        let base: CGFloat = 4
+        let maxH: CGFloat = 88
+        return base + (maxH - base) * max(level, 0.08) * CGFloat(shape)
     }
 }
