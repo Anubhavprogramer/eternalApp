@@ -16,7 +16,6 @@ struct MealBuilderView: View {
 
     // Entrance
     @State private var contentOpacity: Double = 0
-    @State private var contentOffset:  CGFloat = 28
 
     var body: some View {
         ZStack {
@@ -45,7 +44,6 @@ struct MealBuilderView: View {
             }
         }
         .opacity(contentOpacity)
-        .offset(y: contentOffset)
         .ignoresSafeArea(.keyboard, edges: .bottom)
         .onAppear { runEntranceAnimations() }
     }
@@ -336,9 +334,8 @@ struct MealBuilderView: View {
     // MARK: - Entrance Animations
 
     private func runEntranceAnimations() {
-        withAnimation(.spring(response: 0.45, dampingFraction: 0.80).delay(0.05)) {
+        withAnimation(.easeIn(duration: 0.22)) {
             contentOpacity = 1
-            contentOffset  = 0
         }
         withAnimation(.spring(response: 0.50, dampingFraction: 0.75).delay(0.12)) {
             bannerOpacity = 1
