@@ -1,5 +1,35 @@
 import SwiftUI
 
+// MARK: - Ripple Ring
+
+private struct RippleRing: View {
+    let size: CGFloat
+    let lineWidth: CGFloat
+    let opacity: Double
+    let duration: Double
+    let delay: Double
+
+    @State private var animating = false
+
+    var body: some View {
+        Circle()
+            .stroke(Color.zomatoAccent.opacity(animating ? 0 : opacity), lineWidth: lineWidth)
+            .frame(width: size, height: size)
+            .scaleEffect(animating ? 1.35 : 1.0)
+            .onAppear {
+                withAnimation(
+                    .easeOut(duration: duration)
+                    .repeatForever(autoreverses: false)
+                    .delay(delay)
+                ) {
+                    animating = true
+                }
+            }
+    }
+}
+
+// MARK: - MealBuilderView
+
 struct MealBuilderView: View {
     var onDismiss: (() -> Void)? = nil
     @Environment(\.dismiss) private var envDismiss
@@ -101,16 +131,7 @@ struct MealBuilderView: View {
                 .blur(radius: 1)
 
             // Shimmer sweep
-            Rectangle()
-                .fill(LinearGradient(
-                    colors: [.clear, .white.opacity(0.22), .clear],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                ))
-                .frame(width: 100)
-                .offset(x: shimmerOffset)
-                .mask(RoundedRectangle(cornerRadius: 32, style: .continuous).frame(height: 88))
-                .clipped()
+            
 
             // Content
             HStack(spacing: 14) {
@@ -234,53 +255,72 @@ struct MealBuilderView: View {
     private var micControl: some View {
         VStack(spacing: 10) {
             ZStack {
-                // Ripple rings — only while listening
-                if viewModel.state == .listening {
-                    Circle()
-                        .stroke(Color.zomatoAccent.opacity(0.22), lineWidth: 10)
-                        .frame(width: 100, height: 100)
-                        .scaleEffect(1.30)
-                        .opacity(0)
-                        .animation(
-                            .easeOut(duration: 1.4).repeatForever(autoreverses: false),
-                            value: viewModel.state
-                        )
-
-                    Circle()
-                        .stroke(Color.zomatoAccent.opacity(0.12), lineWidth: 6)
-                        .frame(width: 80, height: 80)
-                        .scaleEffect(1.20)
-                        .opacity(0)
-                        .animation(
-                            .easeOut(duration: 1.4).repeatForever(autoreverses: false).delay(0.22),
-                            value: viewModel.state
-                        )
-                }
-
-                // Core button
-                Button { viewModel.toggle() } label: {
+                // ── Idle / done / denied: mic button ─────────────────
+                if viewModel.state != .listening {
                     ZStack {
-                        Circle()
-//                            .fill(micButtonGradient)
-                            .glassEffect(.clear)
-                            .frame(width: 66, height: 66)
-//                            .shadow(color: micButtonShadow, radius: 20, x: 0, y: 8)
 
-                        Image(systemName: micButtonIcon)
-                            .font(.system(size: 26, weight: .semibold))
-                            .foregroundStyle(.white)
-                            .contentTransition(.symbolEffect(.replace))
+                        Button { viewModel.toggle() } label: {
+                            ZStack {
+                                Circle()
+                                    .glassEffect(.clear)
+                                    .frame(width: 66, height: 66)
+                                Image(systemName: micButtonIcon)
+                                    .font(.system(size: 26, weight: .semibold))
+                                    .foregroundStyle(.white)
+                                    .contentTransition(.symbolEffect(.replace))
+                            }
+                        }
+                        .buttonStyle(.plain)
                     }
+                    .transition(.scale(scale: 0.6).combined(with: .opacity))
                 }
-                .buttonStyle(.plain)
+
+                // ── Listening: cross + check only ─────────────────────
+                if viewModel.state == .listening {
+                    HStack(spacing: 36) {
+                        // Cancel — discard and reset
+                        Button {
+                            viewModel.stop()
+                            viewModel.reset()
+                        } label: {
+                            ZStack {
+                                Circle()
+                                    .glassEffect(.clear)
+                                    .frame(width: 62, height: 62)
+                                Image(systemName: "xmark")
+                                    .font(.system(size: 22, weight: .bold))
+                                    .foregroundStyle(.white.opacity(0.85))
+                            }
+                        }
+                        .buttonStyle(.plain)
+
+                        // Confirm — commit transcript
+                        Button {
+                            viewModel.stop()
+                        } label: {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.green.opacity(0.88))
+                                    .glassEffect(.clear)
+                                    .frame(width: 62, height: 62)
+                                    .shadow(color: .green.opacity(0.45), radius: 14, x: 0, y: 6)
+                                Image(systemName: "checkmark")
+                                    .font(.system(size: 22, weight: .bold))
+                                    .foregroundStyle(.white)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .transition(.scale(scale: 0.6).combined(with: .opacity))
+                }
             }
+            .animation(.spring(response: 0.36, dampingFraction: 0.70), value: viewModel.state)
 
             Text(micButtonLabel)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.white.opacity(0.38))
                 .animation(.easeInOut(duration: 0.2), value: viewModel.state)
         }
-        .animation(.spring(response: 0.38, dampingFraction: 0.72), value: viewModel.state)
     }
 
     // MARK: - Mic Button Appearance
