@@ -382,7 +382,20 @@ struct MealBuilderView: View {
                 // Done — Analyse Data
                 if viewModel.state == .done {
                     Button {
-                        print("🔍 Analysing: \(viewModel.transcript) | budget: ₹\(Int(budget)) | diets: \(selectedDiets.sorted().joined(separator: ", "))")
+                        let json = """
+{
+    "user_response": "\(viewModel.transcript)",
+    "vegetarian": \(selectedDiets.contains("vegetarian")),
+    "non_vegetarian": \(selectedDiets.contains("non_vegetarian")),
+    "vegan": \(selectedDiets.contains("vegan")),
+    "high_protein": \(selectedDiets.contains("high_protein")),
+    "diabetic_friendly": \(selectedDiets.contains("diabetic_friendly")),
+    "budget_friendly": \(budget <= 350),
+    "max_budget": \(Int(budget)),
+    "max_cooking_time_minutes": 25
+}
+"""
+                        print(json)
                     } label: {
                         HStack(spacing: 10) {
                             Image(systemName: "sparkles")
