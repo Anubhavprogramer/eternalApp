@@ -43,13 +43,17 @@ private struct DietChip: View {
                 .background {
                     Capsule()
                         .fill(isSelected
-                              ? LinearGradient(colors: [Color.zomatoAccent, Color(red: 0.85, green: 0.20, blue: 0.28)],
-                                               startPoint: .leading, endPoint: .trailing)
-                              : LinearGradient(colors: [Color.white.opacity(0.08), Color.white.opacity(0.08)],
-                                               startPoint: .leading, endPoint: .trailing))
+                              ? LinearGradient(
+                                    colors: [Color.zomatoAccent, Color(red: 0.85, green: 0.20, blue: 0.28)],
+                                    startPoint: .leading, endPoint: .trailing)
+                              : LinearGradient(
+                                    colors: [Color.white.opacity(0.08), Color.white.opacity(0.08)],
+                                    startPoint: .leading, endPoint: .trailing))
                         .overlay(
                             Capsule()
-                                .stroke(isSelected ? Color.zomatoAccent.opacity(0.40) : Color.white.opacity(0.10), lineWidth: 1)
+                                .stroke(isSelected
+                                        ? Color.zomatoAccent.opacity(0.40)
+                                        : Color.white.opacity(0.10), lineWidth: 1)
                         )
                 }
         }
@@ -65,11 +69,11 @@ private struct MealPreferencesCard: View {
     @Binding var selectedDiets: Set<String>
 
     private let dietOptions: [(key: String, label: String)] = [
-        ("vegetarian",       "🌿 Vegetarian"),
-        ("non_vegetarian",   "🍖 Non Vegetarian"),
-        ("vegan",            "🥦 Vegan"),
-        ("high_protein",     "💪 High Protein"),
-        ("diabetic_friendly","🩺 Diabetic Friendly"),
+        ("vegetarian",        "🌿 Vegetarian"),
+        ("non_vegetarian",    "🍖 Non Vegetarian"),
+        ("vegan",             "🥦 Vegan"),
+        ("high_protein",      "💪 High Protein"),
+        ("diabetic_friendly", "🩺 Diabetic Friendly"),
     ]
 
     var body: some View {
@@ -86,7 +90,6 @@ private struct MealPreferencesCard: View {
 
                     Spacer()
 
-                    // Live value pill
                     Text("₹\(Int(budget))")
                         .font(.system(size: 14, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
@@ -95,12 +98,9 @@ private struct MealPreferencesCard: View {
                         .background(Color.zomatoAccent.opacity(0.22), in: Capsule())
                 }
 
-                
-
                 Slider(value: $budget, in: 100...600, step: 50)
                     .tint(Color.zomatoAccent)
 
-                // Range labels
                 HStack {
                     Text("₹100")
                         .font(.caption2.weight(.semibold))
@@ -126,7 +126,6 @@ private struct MealPreferencesCard: View {
                     .foregroundStyle(.white.opacity(0.50))
                     .textCase(.uppercase)
 
-                // Wrap chips — use a flow layout via LazyVGrid
                 LazyVGrid(
                     columns: [GridItem(.flexible()), GridItem(.flexible())],
                     alignment: .leading,
@@ -148,7 +147,8 @@ private struct MealPreferencesCard: View {
             }
         }
         .padding(20)
-        .background(Color.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .background(Color.white.opacity(0.05),
+                    in: RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .stroke(Color.white.opacity(0.08), lineWidth: 1)
@@ -169,8 +169,8 @@ struct MealBuilderView: View {
     @State private var bannerOpacity: Double = 0
     @State private var bannerScale: CGFloat  = 0.94
 
-    // Preferences state (shown in .done)
-    @State private var budget: Double        = 350
+    // Preferences (shown in .done)
+    @State private var budget: Double             = 350
     @State private var selectedDiets: Set<String> = []
 
     // Entrance
@@ -190,13 +190,14 @@ struct MealBuilderView: View {
                     banner
                         .padding(.horizontal, 20)
 
-                    // ── Centre: preferences card in done state ────────
+                    // Centre: done state — transcript + preferences card
                     if viewModel.state == .done {
                         VStack(spacing: 20) {
-
-                            // Exactly the same as before — checkmark + transcript + re-speak
                             VStack(spacing: 12) {
-                                
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.system(size: 32))
+                                    .foregroundStyle(.green)
+                                    .symbolEffect(.bounce, value: viewModel.state)
 
                                 Text(viewModel.transcript)
                                     .font(.system(size: 18, weight: .semibold, design: .rounded))
@@ -204,21 +205,20 @@ struct MealBuilderView: View {
                                     .multilineTextAlignment(.center)
                                     .padding(.horizontal, 32)
 
+                                Button { viewModel.reset() } label: {
+                                    Text("Tap to speak again")
+                                        .font(.caption.weight(.semibold))
+                                        .foregroundStyle(.white.opacity(0.45))
+                                }
+                                .buttonStyle(.plain)
                             }
                             .padding(.top, 24)
 
-                            // Preferences card below
-                            MealPreferencesCard(
-                                budget: $budget,
-                                selectedDiets: $selectedDiets
-                            )
+                            MealPreferencesCard(budget: $budget, selectedDiets: $selectedDiets)
                         }
                         .transition(.scale(scale: 0.94).combined(with: .opacity))
                     }
-                    if viewModel.state == .idle{
-                        Spacer()
-                    }
-                    
+
                     Spacer().frame(height: 20)
 
                     micControl
@@ -298,7 +298,7 @@ struct MealBuilderView: View {
     private var micControl: some View {
         VStack(spacing: 16) {
 
-            // Waveform + transcript while listening
+            // Listening — transcript preview
             if viewModel.state == .listening {
                 VStack(spacing: 12) {
                     Text(viewModel.transcript.isEmpty ? "Listening…" : viewModel.transcript)
@@ -311,7 +311,7 @@ struct MealBuilderView: View {
                 .transition(.scale(scale: 0.92).combined(with: .opacity))
             }
 
-            // Denied
+            // Denied message
             if viewModel.state == .denied {
                 VStack(spacing: 8) {
                     Image(systemName: "mic.slash.fill")
@@ -328,9 +328,12 @@ struct MealBuilderView: View {
 
             // Button row
             ZStack {
-                // Idle
+
+                // Idle — mic button
                 if viewModel.state == .idle {
                     ZStack {
+                        RippleRing(size: 100, lineWidth: 10, opacity: 0.22, duration: 1.4, delay: 0)
+                        RippleRing(size: 80,  lineWidth: 6,  opacity: 0.14, duration: 1.4, delay: 0.22)
                         Button { viewModel.toggle() } label: {
                             ZStack {
                                 Circle()
@@ -338,6 +341,7 @@ struct MealBuilderView: View {
                                         colors: [Color.zomatoAccent, Color(red: 0.85, green: 0.20, blue: 0.28)],
                                         startPoint: .topLeading, endPoint: .bottomTrailing))
                                     .frame(width: 66, height: 66)
+                                    .shadow(color: Color.zomatoAccent.opacity(0.55), radius: 20, x: 0, y: 8)
                                 Image(systemName: "mic.fill")
                                     .font(.system(size: 26, weight: .semibold))
                                     .foregroundStyle(.white)
@@ -379,46 +383,71 @@ struct MealBuilderView: View {
                     .transition(.scale(scale: 0.6).combined(with: .opacity))
                 }
 
-                // Done — Analyse Data
+                // Done — Analyse Data button
                 if viewModel.state == .done {
-                    Button {
-                        let json = """
-{
-    "user_response": "\(viewModel.transcript)",
-    "vegetarian": \(selectedDiets.contains("vegetarian")),
-    "non_vegetarian": \(selectedDiets.contains("non_vegetarian")),
-    "vegan": \(selectedDiets.contains("vegan")),
-    "high_protein": \(selectedDiets.contains("high_protein")),
-    "diabetic_friendly": \(selectedDiets.contains("diabetic_friendly")),
-    "budget_friendly": \(budget <= 350),
-    "max_budget": \(Int(budget)),
-    "max_cooking_time_minutes": 25
-}
-"""
-                        print(json)
-                    } label: {
-                        HStack(spacing: 10) {
-                            Image(systemName: "sparkles")
-                                .font(.system(size: 16, weight: .bold))
-                            Text("Analyse Data")
-                                .font(.system(size: 16, weight: .bold, design: .rounded))
+                    VStack(spacing: 12) {
+                        Button {
+                            viewModel.recommend(
+                                vegetarian:       selectedDiets.contains("vegetarian"),
+                                nonVegetarian:    selectedDiets.contains("non_vegetarian"),
+                                vegan:            selectedDiets.contains("vegan"),
+                                highProtein:      selectedDiets.contains("high_protein"),
+                                diabeticFriendly: selectedDiets.contains("diabetic_friendly"),
+                                budgetFriendly:   budget <= 350,
+                                maxBudget:        Int(budget)
+                            )
+                        } label: {
+                            HStack(spacing: 10) {
+                                if viewModel.recommendationState == .loading {
+                                    ProgressView()
+                                        .progressViewStyle(.circular)
+                                        .tint(.white)
+                                        .scaleEffect(0.85)
+                                } else {
+                                    Image(systemName: "sparkles")
+                                        .font(.system(size: 16, weight: .bold))
+                                }
+                                Text(viewModel.recommendationState == .loading ? "Analysing…" : "Analyse Data")
+                                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                            }
+                            .foregroundStyle(.white)
+                            .padding(.vertical, 16)
+                            .padding(.horizontal, 28)
+                            .background {
+                                Capsule()
+                                    .fill(LinearGradient(
+                                        colors: viewModel.recommendationState == .loading
+                                            ? [Color.gray.opacity(0.5), Color.gray.opacity(0.5)]
+                                            : [Color.zomatoAccent, Color(red: 0.85, green: 0.20, blue: 0.28)],
+                                        startPoint: .leading, endPoint: .trailing))
+                                    .shadow(
+                                        color: Color.zomatoAccent.opacity(
+                                            viewModel.recommendationState == .loading ? 0 : 0.50),
+                                        radius: 18, x: 0, y: 8)
+                            }
                         }
-                        .foregroundStyle(.white)
-                        .padding(.vertical, 16)
-                        .padding(.horizontal, 28)
-                        .background {
-                            Capsule()
-                                .fill(LinearGradient(
-                                    colors: [Color.zomatoAccent, Color(red: 0.85, green: 0.20, blue: 0.28)],
-                                    startPoint: .leading, endPoint: .trailing))
-                                .shadow(color: Color.zomatoAccent.opacity(0.50), radius: 18, x: 0, y: 8)
+                        .buttonStyle(.plain)
+                        .disabled(viewModel.recommendationState == .loading)
+                        .animation(.easeInOut(duration: 0.2), value: viewModel.recommendationState)
+
+                        // Error banner
+                        if case .failure(let msg) = viewModel.recommendationState {
+                            HStack(spacing: 8) {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .foregroundStyle(.orange)
+                                Text(msg)
+                                    .font(.caption)
+                                    .foregroundStyle(.white.opacity(0.72))
+                                    .lineLimit(2)
+                            }
+                            .padding(.horizontal, 20)
+                            .transition(.opacity.combined(with: .move(edge: .bottom)))
                         }
                     }
-                    .buttonStyle(.plain)
                     .transition(.scale(scale: 0.6).combined(with: .opacity))
                 }
 
-                // Denied
+                // Denied — greyed mic slash
                 if viewModel.state == .denied {
                     Circle()
                         .fill(Color.gray.opacity(0.30))
@@ -430,17 +459,19 @@ struct MealBuilderView: View {
                         )
                         .transition(.scale(scale: 0.6).combined(with: .opacity))
                 }
-            }
+
+            } // ZStack (button row)
             .animation(.spring(response: 0.36, dampingFraction: 0.70), value: viewModel.state)
 
-            // Label
+            // Idle label
             if viewModel.state == .idle {
                 Text("Tap to speak")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.white.opacity(0.38))
                     .transition(.opacity)
             }
-        }
+
+        } // VStack (micControl)
     }
 
     // MARK: - Entrance Animations

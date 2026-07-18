@@ -7,10 +7,19 @@ internal import Combine
 // MARK: - Recording State
 
 enum RecordingState {
-    case idle       // waiting for user to tap
-    case listening  // recording + streaming transcript
-    case done       // transcript ready
-    case denied     // permission denied
+    case idle
+    case listening
+    case done
+    case denied
+}
+
+// MARK: - Recommendation State
+
+enum RecommendationState: Equatable {
+    case idle
+    case loading
+    case success(String)
+    case failure(String)
 }
 
 // MARK: - MealBuilderViewModel
@@ -18,9 +27,10 @@ enum RecordingState {
 @MainActor
 final class MealBuilderViewModel: ObservableObject {
 
-    @Published private(set) var state: RecordingState = .idle
-    @Published private(set) var transcript: String    = ""
-    @Published private(set) var audioLevel: CGFloat   = 0   // 0–1, drives waveform bars
+    @Published private(set) var state: RecordingState           = .idle
+    @Published private(set) var transcript: String              = ""
+    @Published private(set) var audioLevel: CGFloat             = 0
+    @Published private(set) var recommendationState: RecommendationState = .idle
 
     // MARK: - Private
 
@@ -63,8 +73,50 @@ final class MealBuilderViewModel: ObservableObject {
     /// Reset transcript and return to idle (used after done state).
     func reset() {
         transcript = ""
+        recommendationState = .idle
         withAnimation(.spring(response: 0.35, dampingFraction: 0.70)) {
             state = .idle
+        }
+    }
+
+    /// Hit the recommendation API with the current transcript + user preferences.
+    func recommend(
+        vegetarian: Bool,
+        nonVegetarian: Bool,
+        vegan: Bool,
+        highProtein: Bool,
+        diabeticFriendly: Bool,
+        budgetFriendly: Bool,
+        maxBudget: Int
+    ) {
+        guard recommendationState != .loading else { return }
+        recommendationState = .loading
+
+        let request = MealRecommendationRequest(
+            user_response:            transcript,
+            vegetarian:               vegetarian,
+            non_vegetarian:           nonVegetarian,
+            vegan:                    vegan,
+            high_protein:             highProtein,
+            diabetic_friendly:        diabeticFriendly,
+            budget_friendly:          budgetFriendly,
+            max_budget:               maxBudget,
+            max_cooking_time_minutes: 25
+        )
+
+        Task {
+            do {
+                let response = try await MealRecommendationService.shared.recommend(request)
+                print("✅ Recommendation response:\n\(response)")
+                withAnimation(.spring(response: 0.38, dampingFraction: 0.75)) {
+                    recommendationState = .success(response)
+                }
+            } catch {
+                print("❌ Recommendation error: \(error.localizedDescription)")
+                withAnimation(.spring(response: 0.38, dampingFraction: 0.75)) {
+                    recommendationState = .failure(error.localizedDescription)
+                }
+            }
         }
     }
 
