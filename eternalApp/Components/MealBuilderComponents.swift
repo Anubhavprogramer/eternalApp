@@ -81,12 +81,15 @@ struct WaveformView: View {
     }
 
     private func barHeight(for index: Int) -> CGFloat {
+        let amplitude: CGFloat = 1.8
         let centre   = Double(barCount - 1) / 2.0
         let distance = abs(Double(index) - centre)
         // Bell-curve shape: centre bars peak higher
         let shape    = pow(1.0 - (distance / centre), 1.4)
         let base: CGFloat = 4
-        let maxH: CGFloat = 88
-        return base + (maxH - base) * max(level, 0.08) * CGFloat(shape)
+        let maxH: CGFloat = 140
+        return base + (maxH - base) *
+            min(max(level * amplitude, 0.08), 1.0) *
+            CGFloat(shape)
     }
 }
