@@ -255,7 +255,7 @@ struct MealBuilderView: View {
                         .font(.system(size: 10, weight: .heavy, design: .rounded))
                         .tracking(2.5)
                         .foregroundStyle(.white.opacity(0.75))
-                    Text("Build a Meal")
+                    Text("Build Your Own Meal")
                         .font(.system(size: 22, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
                         .shadow(color: .black.opacity(0.20), radius: 4, x: 0, y: 2)

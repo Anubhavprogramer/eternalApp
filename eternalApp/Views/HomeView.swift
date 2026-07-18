@@ -11,55 +11,63 @@ struct HomeView: View {
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
-            LinearGradient(
-                colors: [Color(red: 0.99, green: 0.84, blue: 0.34), Color(red: 0.98, green: 0.96, blue: 0.90)],
-                startPoint: .top,
-                endPoint: .center
-            )
-            .ignoresSafeArea()
-            // Tap anywhere on the background to dismiss keyboard
-            .onTapGesture { UIApplication.shared.dismissKeyboard() }
+//            LinearGradient(
+//                colors: [Color(red: 0.99, green: 0.84, blue: 0.34), Color(red: 0.98, green: 0.96, blue: 0.90)],
+//                startPoint: .top,
+//                endPoint: .center
+//            )
+//            .ignoresSafeArea()
+//            // Tap anywhere on the background to dismiss keyboard
+//            .onTapGesture { UIApplication.shared.dismissKeyboard() }
 
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: 22) {
-                    AppHeaderView(
-                        restaurant: store.restaurant,
-                        cartCount: cartViewModel.itemCount,
-                        onCartTap: { path.append(.cart) }
-                    )
-
-                    SearchBarView(query: $query)
-
-                    HeroCardView(restaurant: store.restaurant)
-
-                    OfferBannerView()
-
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("WHAT'S ON YOUR MIND?")
-                            .font(.caption.weight(.heavy))
-                            .tracking(2)
-                            .foregroundStyle(Color.black.opacity(0.60))
-                            .padding(.horizontal, 20)
-
-                        CategoryChipsView(categories: store.categories, selectedCategoryID: $selectedCategoryID)
-
-                        LazyVStack(spacing: 14) {
-                            ForEach(filteredItems) { item in
-                                MenuItemCardView(
-                                    item: item,
-                                    quantity: cartViewModel.quantity(for: item),
-                                    onAdd:      { cartViewModel.add(item)      },
-                                    onIncrease: { cartViewModel.increase(item) },
-                                    onDecrease: { cartViewModel.decrease(item) }
-                                )
-                            }
-                        }
-                        .padding(.horizontal, 20)
+//            ScrollView(showsIndicators: false) {
+//                VStack(spacing: 22) {
+//                    AppHeaderView(
+//                        restaurant: store.restaurant,
+//                        cartCount: cartViewModel.itemCount,
+//                        onCartTap: { path.append(.cart) }
+//                    )
+//
+//                    SearchBarView(query: $query)
+//
+//                    HeroCardView(restaurant: store.restaurant)
+//
+//                    OfferBannerView()
+//
+//                    VStack(alignment: .leading, spacing: 16) {
+//                        Text("WHAT'S ON YOUR MIND?")
+//                            .font(.caption.weight(.heavy))
+//                            .tracking(2)
+//                            .foregroundStyle(Color.black.opacity(0.60))
+//                            .padding(.horizontal, 20)
+//
+//                        CategoryChipsView(categories: store.categories, selectedCategoryID: $selectedCategoryID)
+//
+//                        LazyVStack(spacing: 14) {
+//                            ForEach(filteredItems) { item in
+//                                MenuItemCardView(
+//                                    item: item,
+//                                    quantity: cartViewModel.quantity(for: item),
+//                                    onAdd:      { cartViewModel.add(item)      },
+//                                    onIncrease: { cartViewModel.increase(item) },
+//                                    onDecrease: { cartViewModel.decrease(item) }
+//                                )
+//                            }
+//                        }
+//                        .padding(.horizontal, 20)
+//                    }
+//                    .padding(.bottom, 110)
+//                }
+//            }
+//            .scrollDismissesKeyboard(.interactively)
+            
+            Image("homeScreen")
+                    .resizable()
+                    .scaledToFill()
+                    .ignoresSafeArea()
+                    .onTapGesture {
+                        UIApplication.shared.dismissKeyboard()
                     }
-                    .padding(.bottom, 110)
-                }
-            }
-            .scrollDismissesKeyboard(.interactively)
 
             // Floating widget button
             MakeMealWidgetButton {
@@ -69,7 +77,7 @@ struct HomeView: View {
                 }
             }
             .padding(.trailing, 20)
-            .padding(.bottom, 32)
+            .padding(.bottom, 160)
 
             // Custom modal overlay
             if showingMealBuilder {
