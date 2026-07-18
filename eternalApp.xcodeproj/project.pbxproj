@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		74E06261300C322900DD3156 /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = 74E06260300C322900DD3156 /* Lottie */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		74D6AAA3300B80D500AD71CF /* eternalApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = eternalApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -36,6 +40,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				74E06261300C322900DD3156 /* Lottie in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,6 +83,7 @@
 			);
 			name = eternalApp;
 			packageProductDependencies = (
+				74E06260300C322900DD3156 /* Lottie */,
 			);
 			productName = eternalApp;
 			productReference = 74D6AAA3300B80D500AD71CF /* eternalApp.app */;
@@ -107,6 +113,9 @@
 			);
 			mainGroup = 74D6AA9A300B80D500AD71CF;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				74E0625F300C322900DD3156 /* XCRemoteSwiftPackageReference "lottie-spm" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 74D6AAA4300B80D500AD71CF /* Products */;
 			projectDirPath = "";
@@ -368,6 +377,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		74E0625F300C322900DD3156 /* XCRemoteSwiftPackageReference "lottie-spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/airbnb/lottie-spm";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.6.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		74E06260300C322900DD3156 /* Lottie */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 74E0625F300C322900DD3156 /* XCRemoteSwiftPackageReference "lottie-spm" */;
+			productName = Lottie;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 74D6AA9B300B80D500AD71CF /* Project object */;
 }

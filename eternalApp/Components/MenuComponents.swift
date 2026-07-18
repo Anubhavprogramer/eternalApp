@@ -1,4 +1,5 @@
 import SwiftUI
+import Lottie
 
 // MARK: - Keyboard dismiss helper
 
@@ -399,62 +400,48 @@ struct MakeMealWidgetButton: View {
     let action: () -> Void
 
     @State private var isPressed      = false
-    @State private var isPulsing      = false
     @State private var shimmerOffset: CGFloat = -120
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 10) {
-                ZStack {
-                    Circle()
-                        .fill(.white.opacity(0.18))
-                        .frame(width: 34, height: 34)
-                        .scaleEffect(isPulsing ? 1.18 : 1.0)
-                        .animation(
-                            .easeInOut(duration: 1.1).repeatForever(autoreverses: true),
-                            value: isPulsing
-                        )
+            VStack(spacing: 0) {
+                LottieView(animation: .named("food"))
+                    .playing(loopMode: .loop)
+                    .frame(width: 66, height: 66)
+                    .clipped()
 
-                    Image(systemName: "fork.knife")
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundStyle(.white)
-                }
-
-                Text("Make your meal")
+                Text("BYOM")
+                    .padding(10)
                     .font(.system(size: 15, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
+                    .background {
+                        ZStack {
+                            Capsule()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [Color.zomatoAccent, Color(red: 0.85, green: 0.20, blue: 0.28)],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
 
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .heavy))
-                    .foregroundStyle(.white.opacity(0.80))
+                            Capsule()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [.clear, .white.opacity(0.22), .clear],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                                .offset(x: shimmerOffset)
+                                .clipped()
+                                .mask(Capsule())
+                        }
+                    }
             }
             .padding(.leading, 10)
-            .padding(.trailing, 18)
-            .padding(.vertical, 12)
-            .background {
-                ZStack {
-                    Capsule()
-                        .fill(
-                            LinearGradient(
-                                colors: [Color.zomatoAccent, Color(red: 0.85, green: 0.20, blue: 0.28)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-
-                    Capsule()
-                        .fill(
-                            LinearGradient(
-                                colors: [.clear, .white.opacity(0.22), .clear],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .offset(x: shimmerOffset)
-                        .clipped()
-                        .mask(Capsule())
-                }
-            }
+            .padding(.trailing, 10)
+            
             .shadow(color: Color.zomatoAccent.opacity(0.52), radius: 18, x: 0, y: 8)
             .scaleEffect(isPressed ? 0.94 : 1.0)
             .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isPressed)
@@ -466,7 +453,6 @@ struct MakeMealWidgetButton: View {
                 .onEnded   { _ in isPressed = false }
         )
         .onAppear {
-            isPulsing = true
             shimmerOffset = -120
             withAnimation(.linear(duration: 2.2).repeatForever(autoreverses: false)) {
                 shimmerOffset = 200
