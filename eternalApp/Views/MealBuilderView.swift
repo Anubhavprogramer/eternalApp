@@ -77,26 +77,29 @@ struct MealBuilderView: View {
 
     private var banner: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(LinearGradient(
-                    colors: [
-                        Color(red: 0.55, green: 0.10, blue: 0.16),
-                        Color.zomatoAccent,
-                        Color(red: 0.95, green: 0.48, blue: 0.18)
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                ))
-                .frame(height: 88)
+//            RoundedRectangle(cornerRadius: 22, style: .continuous)
+//                .fill(LinearGradient(
+//                    colors: [
+//                        Color(red: 0.55, green: 0.10, blue: 0.16),
+//                        Color.zomatoAccent,
+//                        Color(red: 0.95, green: 0.48, blue: 0.18)
+//                    ],
+//                    startPoint: .topLeading,
+//                    endPoint: .bottomTrailing
+//                ))
+//                .frame(height: 88)
+//                .cornerRadius(32)
+//                .glassEffect(.clear)
+                
 
             // Decorative blobs
             Circle().fill(.white.opacity(0.08))
                 .frame(width: 110, height: 110)
-                .offset(x: -110, y: -20)
+                .offset(x: -90, y: -20)
                 .blur(radius: 1)
             Circle().fill(.white.opacity(0.06))
                 .frame(width: 80, height: 80)
-                .offset(x: 120, y: 30)
+                .offset(x: 80, y: 30)
                 .blur(radius: 1)
 
             // Shimmer sweep
@@ -108,7 +111,7 @@ struct MealBuilderView: View {
                 ))
                 .frame(width: 100)
                 .offset(x: shimmerOffset)
-                .mask(RoundedRectangle(cornerRadius: 22, style: .continuous).frame(height: 88))
+                .mask(RoundedRectangle(cornerRadius: 32, style: .continuous).frame(height: 88))
                 .clipped()
 
             // Content
@@ -138,6 +141,7 @@ struct MealBuilderView: View {
         .scaleEffect(bannerScale)
         .opacity(bannerOpacity)
         .clipped()
+        .glassEffect(.clear)
     }
 
     // MARK: - Centre Section (state-driven)
@@ -259,9 +263,10 @@ struct MealBuilderView: View {
                 Button { viewModel.toggle() } label: {
                     ZStack {
                         Circle()
-                            .fill(micButtonGradient)
+//                            .fill(micButtonGradient)
+                            .glassEffect(.clear)
                             .frame(width: 66, height: 66)
-                            .shadow(color: micButtonShadow, radius: 20, x: 0, y: 8)
+//                            .shadow(color: micButtonShadow, radius: 20, x: 0, y: 8)
 
                         Image(systemName: micButtonIcon)
                             .font(.system(size: 26, weight: .semibold))
