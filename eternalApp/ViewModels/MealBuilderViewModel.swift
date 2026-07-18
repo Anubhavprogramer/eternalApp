@@ -35,12 +35,32 @@ final class MealBuilderViewModel: ObservableObject {
     func toggle() {
         switch state {
         case .idle, .done: requestPermissionsAndStart()
-        case .listening:   stop()
+        case .listening:   confirm()
         case .denied:      break
         }
     }
 
-    /// Reset transcript and return to idle.
+    /// Confirm: stop recording, print transcript, move to done.
+    func confirm() {
+        stopAudio()
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.70)) {
+            state = transcript.isEmpty ? .idle : .done
+        }
+        if !transcript.isEmpty {
+            print("🎙️ Voice input: \(transcript)")
+        }
+    }
+
+    /// Cancel: stop recording, discard transcript, return to idle.
+    func cancel() {
+        stopAudio()
+        transcript = ""
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.70)) {
+            state = .idle
+        }
+    }
+
+    /// Reset transcript and return to idle (used after done state).
     func reset() {
         transcript = ""
         withAnimation(.spring(response: 0.35, dampingFraction: 0.70)) {
@@ -48,8 +68,17 @@ final class MealBuilderViewModel: ObservableObject {
         }
     }
 
-    /// Stop recording cleanly (called by the view on dismiss too).
+    /// Stop recording cleanly (called by the view on dismiss).
     func stop() {
+        stopAudio()
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.70)) {
+            state = transcript.isEmpty ? .idle : .done
+        }
+    }
+
+    // MARK: - Audio teardown
+
+    private func stopAudio() {
         task?.cancel()
         task = nil
         request?.endAudio()
@@ -61,19 +90,8 @@ final class MealBuilderViewModel: ObservableObject {
         }
 
         try? AVAudioSession.sharedInstance().setActive(false)
-
         audioLevel = 0
-
-        withAnimation(.spring(response: 0.35, dampingFraction: 0.70)) {
-            state = transcript.isEmpty ? .idle : .done
-        }
-
-        if !transcript.isEmpty {
-            print("🎙️ Voice input: \(transcript)")
-        }
     }
-
-    // MARK: - Permission flow
 
     private func requestPermissionsAndStart() {
         SFSpeechRecognizer.requestAuthorization { [weak self] status in

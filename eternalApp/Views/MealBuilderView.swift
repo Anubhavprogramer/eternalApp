@@ -229,8 +229,7 @@ struct MealBuilderView: View {
                     HStack(spacing: 36) {
                         // Cancel
                         Button {
-                            viewModel.stop()
-                            viewModel.reset()
+                            viewModel.cancel()
                         } label: {
                             ZStack {
                                 Circle()
@@ -246,7 +245,7 @@ struct MealBuilderView: View {
                         WaveformView(level: viewModel.audioLevel)
                         
                         // Confirm
-                        Button { viewModel.stop() } label: {
+                        Button { viewModel.confirm() } label: {
                             ZStack {
                                 Circle()
                                     .fill(Color.green.opacity(0.88))
@@ -285,7 +284,7 @@ struct MealBuilderView: View {
     private var micButtonLabel: String {
         switch viewModel.state {
         case .idle:      return "Tap to speak"
-        case .listening: return "Tap to stop"
+        case .listening: return ""
         case .done:      return "Tap to redo"
         case .denied:    return "Permission denied"
         }
